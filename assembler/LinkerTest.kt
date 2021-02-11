@@ -168,4 +168,84 @@ class LinkerTest {
         assertEquals(sim.getReg(1), sim.getReg(2))
         assertEquals(42, sim.getReg(3))
     }
+
+    @Test fun dataRelocationWithMultipleFiles() {
+        val (prog1, _) = Assembler.assemble("""
+        .data
+        world: .string " World!"
+        
+        .globl main
+        .text
+        main:
+            mv s0 ra
+            jal print_char
+            la a1 world
+            li a0 4 
+            ecall
+            mv ra s0
+            ret
+        """)
+        val (prog2, _) = Assembler.assemble("""
+        .data
+        hello: .string "Hello"
+        
+        .text
+        .globl print_char
+        print_char:
+            la a1 hello
+            li a0 4 
+            ecall
+            ret
+        """)
+        val PandL = ProgramAndLibraries(listOf(prog1, prog2), VirtualFileSystem("dummy"))
+        val linked = Linker.link(PandL)
+        val sim = Simulator(linked)
+        sim.run()
+        assertEquals("Hello World!", sim.stdout)
+    }
+
+    @Test fun localAndGlobalDataRelocationWithMultipleFiles() {
+        val (prog1, _) = Assembler.assemble("""
+        .data
+        world: .string " World!"
+        max: .string "MAX"
+        .globl max
+        
+        .globl main
+        .text
+        main:
+            mv s0 ra
+            jal print_char
+            la a1 min
+            li a0 4 
+            ecall
+            la a1 world
+            li a0 4 
+            ecall
+            mv ra s0
+            ret
+        """)
+        val (prog2, _) = Assembler.assemble("""
+        .data
+        hello: .string "Hello "
+        min: .string "MIN"
+        .globl min
+        
+        .text
+        .globl print_char
+        print_char:
+            la a1 hello
+            li a0 4 
+            ecall
+            la a1 max
+            li a0 4 
+            ecall
+            ret
+        """)
+        val PandL = ProgramAndLibraries(listOf(prog1, prog2), VirtualFileSystem("dummy"))
+        val linked = Linker.link(PandL)
+        val sim = Simulator(linked)
+        sim.run()
+        assertEquals("Hello MAXMIN World!", sim.stdout)
+    }
 }
