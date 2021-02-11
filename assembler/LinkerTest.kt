@@ -204,7 +204,7 @@ class LinkerTest {
         assertEquals("Hello World!", sim.stdout)
     }
 
-    @Test fun localAndGlobalDataRelocationWithMultipleFiles() {
+    @Test fun localAndGlobalTextAndDataRelocationWithMultipleFiles() {
         val (prog1, _) = Assembler.assemble("""
         .data
         world: .string " World!"
@@ -219,6 +219,13 @@ class LinkerTest {
             la a1 min
             li a0 4 
             ecall
+            j foo
+            nop
+            nop
+            nop
+            nop
+            nop
+        foo:
             la a1 world
             li a0 4 
             ecall
@@ -237,6 +244,13 @@ class LinkerTest {
             la a1 hello
             li a0 4 
             ecall
+            j foo
+            nop
+            nop
+            nop
+            nop
+            nop
+        foo:
             la a1 max
             li a0 4 
             ecall
