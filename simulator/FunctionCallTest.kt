@@ -196,6 +196,6 @@ class FunctionCallTest {
         assertEquals(0, sim.getReg(Registers.ra).toInt())
         sim.run()
         assertEquals(6, sim.getCycles())
-        assertEquals(0, sim.getReg(Registers.a0).toInt())
+        assertEquals(2, sim.getReg(Registers.a0).toInt())
     }
 }
